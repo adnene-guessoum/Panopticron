@@ -1,6 +1,6 @@
 name: percepticron ci pipeline
 
-on: [push, pull-request]
+on: [push, pull_request]
 
 jobs:
   test:
