@@ -1,2 +1,6 @@
 poetry.lock
 .env
+
+# python package
+__pycache__/
+*.pyc
