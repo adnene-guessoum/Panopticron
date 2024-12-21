@@ -3,7 +3,8 @@
 
 def main():
     """TODO"""
-    pass
+    print("TODO")
+    return 0
 
 
 if __name__ == "__main__":

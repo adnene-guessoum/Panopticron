@@ -1,0 +1,20 @@
+version: 3
+
+tasks:
+  install:
+    desc: Install dependencies (poetry)
+    cmds:
+      - poetry install --no-root
+
+  lint:
+    desc: Lint the code (mypy, black, flake8, pylint)
+    cmds:
+      - poetry run mypy script
+      - poetry run black script
+      - poetry run flake8 script --show-source --statistics --count
+      - poetry run pylint script
+
+  test:
+    desc: Run tests
+    cmds:
+      - poetry run pytest
