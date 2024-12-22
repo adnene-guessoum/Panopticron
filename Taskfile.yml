@@ -9,7 +9,7 @@ tasks:
   lint:
     desc: Lint the code (mypy, black, flake8, pylint)
     cmds:
-      - poetry run mypy script
+      - poetry run mypy script --install-types --non-interactive
       - poetry run black script
       - poetry run flake8 script --show-source --statistics --count
       - poetry run pylint script
