@@ -1,13 +1,8 @@
 """test file for panopticron.py script"""
-import os
-
 from dotenv import load_dotenv
 from script import panopticron
 
 load_dotenv()
-
-# use the following to test with own GitHub username
-PERSONAL_GITHUB_USERNAME = os.getenv("PERSONAL_GITHUB_USERNAME")
 
 
 class MockEmptyResponse:
