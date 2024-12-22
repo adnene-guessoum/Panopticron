@@ -1,5 +1,9 @@
 """test file for panopticron.py script"""
+import datetime
+
 from script import panopticron
+
+TARGET_GITHUB_USERNAME = "testuser"
 
 
 class MockEmptyResponse:
@@ -7,15 +11,50 @@ class MockEmptyResponse:
         return {}
 
 
-class TestPanopticron:
-    def test_panopticron(self, capsys):
-        return_value = panopticron.main()
-        capture = capsys.readouterr()
-        assert capture.out == "TODO\n"
-        assert capture.err == ""
-        assert return_value == 0
+class ValidUserActivity:
+    """mock response for user activity to keep."""
 
-    def test_sanity_check_user_activity_wrong_username(self, capsys, caplog):
+    @staticmethod
+    def get_user_activity():
+        now = datetime.datetime.now(datetime.timezone.utc)
+        return [
+            {
+                "created_at": (now - datetime.timedelta(hours=1)).isoformat(),
+                "type": "PushEvent",
+                "repo": {"name": "testuser/test-repo"},
+                "url": "https://api.github.com/events/123456789",
+            },
+            {
+                "created_at": (now - datetime.timedelta(hours=3)).isoformat(),
+                "type": "PullRequestEvent",
+                "repo": {"name": "testuser/another-repo"},
+                "url": "https://api.github.com/events/987654321",
+            },
+        ]
+
+
+class InvalidUserActivity:
+    """mock response for user activity from 2 days ago."""
+
+    @staticmethod
+    def get_user_activity():
+        now = datetime.datetime.now(datetime.timezone.utc)
+        return [
+            {
+                "created_at": (now - datetime.timedelta(days=2)).isoformat(),
+                "type": "IssueCommentEvent",
+                "repo": {"name": "testuser/old-repo"},
+                "url": "https://api.github.com/events/111111111",
+            }
+        ]
+
+
+class TestPanopticron:
+    def test_main(self):
+        result = panopticron.main(TARGET_GITHUB_USERNAME)
+        assert result == TARGET_GITHUB_USERNAME
+
+    def test_check_sanity_github_api_response_wrong_username(self, capsys, caplog):
         username = "nonexistentuser"
         response = MockEmptyResponse()  # github api response for nonexistent user
         sanity_check = panopticron.check_sanity_github_api_response(response, username)
@@ -25,3 +64,15 @@ class TestPanopticron:
         assert capture_out_err.err == ""
         assert f"No data found for {username}" in capture_log
         assert sanity_check is None
+
+    def test_filter_last_24_hours_activity_valid(self):
+        user_activity = ValidUserActivity.get_user_activity()
+        result = panopticron.filter_last_24_hours_activity(user_activity)
+        assert len(result) == 2
+        assert "PushEvent" in result[0]
+        assert "PullRequestEvent" in result[1]
+
+    def test_filter_last_24_hours_activity_invalid(self):
+        user_activity = InvalidUserActivity.get_user_activity()
+        result = panopticron.filter_last_24_hours_activity(user_activity)
+        assert len(result) == 0

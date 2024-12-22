@@ -1,14 +1,17 @@
 """ Script to check on specific gh user's contributions, and send an email. """
+import datetime
 import logging
 import os
+from urllib.parse import urljoin
 
 import requests
+from dateutil import parser
 from dotenv import load_dotenv
 
 logger = logging.getLogger(__name__)
 load_dotenv()
-PERSONAL_GITHUB_USERNAME = os.getenv("PERSONAL_GITHUB_USERNAME")
 PERSONAL_GITHUB_TOKEN = os.getenv("PERSONAL_GITHUB_TOKEN")
+TARGET_GITHUB_USERNAME = os.getenv("TARGET_GITHUB_USERNAME")
 
 
 def get_user_activity(username):
@@ -53,11 +56,37 @@ def check_sanity_github_api_response(response, username):
     return response.json()
 
 
-def main():
-    """TODO"""
-    print("TODO")
-    return 0
+def filter_last_24_hours_activity(user_activity):
+    """extract relevant info from response"""
+
+    today = datetime.datetime.now(datetime.timezone.utc)
+    user_activity_last_24_hours = []
+    for event in user_activity:
+        if not today - parser.parse(event["created_at"]) < datetime.timedelta(days=1):
+            continue
+        event_type = event["type"]
+        repo_name = event["repo"]["name"]
+        created_at = event["created_at"]
+        body = (
+            f"\n ===================== \n"
+            f"New activity by {TARGET_GITHUB_USERNAME}:\n\n"
+            f"Url: {event.get('url', '')}"
+            f"Event Type: {event_type}\n"
+            f"Repository: {repo_name}\n"
+            f"Time: {created_at}\n"
+            f"Repo_URL: {urljoin('https://github.com/', repo_name)}\n"
+            f"author_URL: {urljoin('https://github.com/', TARGET_GITHUB_USERNAME)}"
+            f"\n ===================== \n"
+        )
+        user_activity_last_24_hours.append(body)
+
+    return user_activity_last_24_hours
+
+
+def main(username):
+    """main function when running the script"""
+    return username
 
 
 if __name__ == "__main__":
-    main()
+    main(TARGET_GITHUB_USERNAME)
