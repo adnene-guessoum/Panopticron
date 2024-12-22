@@ -34,6 +34,12 @@ def get_user_activity(username):
     except requests.exceptions.RequestException as err:
         raise SystemExit(err) from err
 
+    return check_sanity_github_api_response(response, username)
+
+
+def check_sanity_github_api_response(response, username):
+    """handle empty response from GitHub API."""
+
     if not bool(response.json()):  # empty response
         logger.error("No data found for %s", username)
         logger.info(

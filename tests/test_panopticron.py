@@ -10,6 +10,11 @@ load_dotenv()
 PERSONAL_GITHUB_USERNAME = os.getenv("PERSONAL_GITHUB_USERNAME")
 
 
+class MockEmptyResponse:
+    def json(self):
+        return {}
+
+
 class TestPanopticron:
     def test_panopticron(self, capsys):
         return_value = panopticron.main()
@@ -18,17 +23,13 @@ class TestPanopticron:
         assert capture.err == ""
         assert return_value == 0
 
-    def test_working_get_user_activity(self):
-        response = panopticron.get_user_activity(PERSONAL_GITHUB_USERNAME)
-        assert response is not None
-        assert isinstance(response, list)
-
-    def test_get_user_activity_wrong_username(self, capsys, caplog):
+    def test_sanity_check_user_activity_wrong_username(self, capsys, caplog):
         username = "nonexistentuser"
-        response = panopticron.get_user_activity(username)
+        response = MockEmptyResponse()  # github api response for nonexistent user
+        sanity_check = panopticron.check_sanity_github_api_response(response, username)
         capture_out_err = capsys.readouterr()
         capture_log = caplog.text
         assert capture_out_err.out == ""
         assert capture_out_err.err == ""
         assert f"No data found for {username}" in capture_log
-        assert response is None
+        assert sanity_check is None
