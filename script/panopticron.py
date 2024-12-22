@@ -2,6 +2,9 @@
 import datetime
 import logging
 import os
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 from urllib.parse import urljoin
 
 import requests
@@ -12,6 +15,12 @@ logger = logging.getLogger(__name__)
 load_dotenv()
 PERSONAL_GITHUB_TOKEN = os.getenv("PERSONAL_GITHUB_TOKEN")
 TARGET_GITHUB_USERNAME = os.getenv("TARGET_GITHUB_USERNAME")
+
+SMTP_SERVER = os.getenv("SMTP_SERVER")
+SMTP_PORT = os.getenv("SMTP_PORT")
+EMAIL_SENDER = os.getenv("EMAIL_SENDER")
+EMAIL_PASSWORD = os.getenv("EMAIL_PASSWORD")
+EMAIL_RECIPIENT = os.getenv("EMAIL_RECIPIENT")
 
 
 def get_user_activity(username):
@@ -45,7 +54,8 @@ def check_sanity_github_api_response(response, username):
 
     if not bool(response.json()):  # empty response
         logger.error("No data found for %s", username)
-        logger.info(
+        logger.warning(
+            "No email will be sent. Exiting script..."
             "Check if the username is correct. %s"
             "Otherwise, check the GitHub API documentation for more information : "
             "https://docs.github.com/rest",
@@ -58,6 +68,9 @@ def check_sanity_github_api_response(response, username):
 
 def filter_last_24_hours_activity(user_activity):
     """extract relevant info from response"""
+
+    if not user_activity:
+        return None
 
     today = datetime.datetime.now(datetime.timezone.utc)
     user_activity_last_24_hours = []
@@ -83,9 +96,33 @@ def filter_last_24_hours_activity(user_activity):
     return user_activity_last_24_hours
 
 
+def send_email(user_activity_last_24_hours):
+    """send email with the extracted info"""
+
+    if not user_activity_last_24_hours:
+        return
+
+    content = "".join(user_activity_last_24_hours)
+
+    email = MIMEMultipart()
+    email["From"] = EMAIL_SENDER
+    email["To"] = EMAIL_RECIPIENT
+    email["Subject"] = f"Last 24H GitHub Activity from {TARGET_GITHUB_USERNAME}"
+    email.attach(MIMEText(content, "plain"))
+
+    with smtplib.SMTP_SSL(host=SMTP_SERVER, port=SMTP_PORT) as server:
+        server.login(EMAIL_SENDER, EMAIL_PASSWORD)
+        server.send_message(email)
+        logger.info("Email sent successfully: %s", email["Subject"])
+
+    return
+
+
 def main(username):
     """main function when running the script"""
-    return username
+    user_activity = get_user_activity(username)
+    user_activity_last_24_hours = filter_last_24_hours_activity(user_activity)
+    send_email(user_activity_last_24_hours)
 
 
 if __name__ == "__main__":
