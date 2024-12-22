@@ -88,3 +88,19 @@ class TestPanopticron:
         user_activity = InvalidUserActivity.get_user_activity()
         result = panopticron.filter_last_24_hours_activity(user_activity)
         assert len(result) == 0
+
+    def test_send_email_no_user_activity_last_24_hours(self, capsys, caplog):
+        panopticron.send_email([])
+        capture_out_err = capsys.readouterr()
+        capture_log = caplog.text
+        assert capture_out_err.out == ""
+        assert capture_out_err.err == ""
+        assert (
+            "No activity found in the last 24 hours. Exiting script..." in capture_log
+        )
+
+    def test_check_env_vars_missing_vars(self, caplog, capsys):
+        env_vars = ["GITHUB_API_TOKEN", "EMAIL_USERNAME", "EMAIL_PASSWORD"]
+        panopticron.check_env_vars(env_vars)
+        capture_log = caplog.text
+        assert "Missing environment variables:" in capture_log
