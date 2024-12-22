@@ -50,19 +50,31 @@ class InvalidUserActivity:
 
 
 class TestPanopticron:
-    def test_main(self):
-        result = panopticron.main(TARGET_GITHUB_USERNAME)
-        assert result == TARGET_GITHUB_USERNAME
+
+    """Test not supposed to run on CI/CD pipeline. but I'll keep for local testing.
+
+    def test_main_wrong_target_username(self, caplog):
+        panopticron.main(TARGET_GITHUB_USERNAME)
+        capture_log = caplog.text
+        assert f"No data found for {TARGET_GITHUB_USERNAME}" in capture_log
+        assert "No email will be sent. Exiting script..." in capture_log
+        assert "Check if the username is correct. testuser" in capture_log
+    """
 
     def test_check_sanity_github_api_response_wrong_username(self, capsys, caplog):
-        username = "nonexistentuser"
         response = MockEmptyResponse()  # github api response for nonexistent user
-        sanity_check = panopticron.check_sanity_github_api_response(response, username)
+        sanity_check = panopticron.check_sanity_github_api_response(
+            response, TARGET_GITHUB_USERNAME
+        )
         capture_out_err = capsys.readouterr()
         capture_log = caplog.text
         assert capture_out_err.out == ""
         assert capture_out_err.err == ""
-        assert f"No data found for {username}" in capture_log
+        assert f"No data found for {TARGET_GITHUB_USERNAME}" in capture_log
+        assert "No email will be sent. Exiting script..." in capture_log
+        assert (
+            f"Check if the username is correct. {TARGET_GITHUB_USERNAME}" in capture_log
+        )
         assert sanity_check is None
 
     def test_filter_last_24_hours_activity_valid(self):
