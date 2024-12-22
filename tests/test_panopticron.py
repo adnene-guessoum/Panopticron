@@ -1,8 +1,5 @@
 """test file for panopticron.py script"""
-from dotenv import load_dotenv
 from script import panopticron
-
-load_dotenv()
 
 
 class MockEmptyResponse:
