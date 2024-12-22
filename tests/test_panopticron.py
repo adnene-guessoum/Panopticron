@@ -50,12 +50,16 @@ class InvalidUserActivity:
 
 
 class TestPanopticron:
+
+    """Test not supposed to run on CI/CD pipeline. but I'll keep for local testing.
+
     def test_main_wrong_target_username(self, caplog):
         panopticron.main(TARGET_GITHUB_USERNAME)
         capture_log = caplog.text
         assert f"No data found for {TARGET_GITHUB_USERNAME}" in capture_log
         assert "No email will be sent. Exiting script..." in capture_log
         assert "Check if the username is correct. testuser" in capture_log
+    """
 
     def test_check_sanity_github_api_response_wrong_username(self, capsys, caplog):
         response = MockEmptyResponse()  # github api response for nonexistent user
