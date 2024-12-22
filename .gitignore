@@ -1,6 +1,8 @@
 poetry.lock
 .env
+run.sh
 
 # python package
 __pycache__/
 *.pyc
+temp_*.py
