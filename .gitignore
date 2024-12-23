@@ -5,5 +5,5 @@ run.sh
 # python package
 __pycache__/
 *.pyc
-temp_*.py
+temp_*
 logs/

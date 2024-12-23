@@ -152,7 +152,7 @@ def send_email(user_activity_last_24_hours):
 
     if not user_activity_last_24_hours:
         logger.warning("No activity found in the last 24 hours. Exiting script...")
-        return
+        return False
 
     content = "".join(user_activity_last_24_hours)
 
@@ -166,6 +166,8 @@ def send_email(user_activity_last_24_hours):
         server.login(EMAIL_SENDER, EMAIL_PASSWORD)
         server.send_message(email)
         logger.info("Email sent successfully: %s", email["Subject"])
+
+    return True
 
 
 def log_successful_run():
@@ -199,8 +201,9 @@ def main(username):
     user_activity = get_user_activity(username)
     user_activity_last_24_hours = filter_last_24_hours_activity(user_activity)
     log_last_run_results(user_activity_last_24_hours)
-    send_email(user_activity_last_24_hours)
-    log_successful_run()
+    email_status = send_email(user_activity_last_24_hours)
+    if email_status:
+        log_successful_run()
 
 
 if __name__ == "__main__":
